@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 
 	"github.com/gocolly/colly"
+	"golang.org/x/text/encoding/charmap"
 )
 
 func main() {
@@ -24,16 +26,24 @@ func main() {
 		),
 	)
 
+	songCollector := c.Clone()
+
 	// On every a element which has href attribute call callback
-	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+	c.OnHTML(`a[href]`, func(e *colly.HTMLElement) {
 		link := e.Attr("href")
 
+		// fix regexp or fuck this
+		if e.Text == "" {
+			return
+		}
+
 		// Print link
-		fmt.Printf("Link found: %q -> %s\n", e.Text, link)
+		decodedSongTitle := decodeWindows1251([]byte(e.Text))
+		log.Printf("Link found: %q -> %s\n", decodedSongTitle, link)
 
 		// Visit link found on page
 		// Only those links are visited which are in AllowedDomains
-		c.Visit(e.Request.AbsoluteURL(link))
+		songCollector.Visit(e.Request.AbsoluteURL(link))
 	})
 
 	// Before making a request print "Visiting ..."
@@ -41,5 +51,35 @@ func main() {
 		fmt.Println("Visiting", r.URL.String())
 	})
 
+	songCollector.OnHTML(`div[id=cont]`, func(e *colly.HTMLElement) {
+		log.Println("Song link found", e.Request.URL)
+
+		// songTitle := e.ChildText("div.h3")
+		// log.Printf("Find song title %s", songTitle)
+
+		/*
+			albumTitle := e.ChildText("p")
+			log.Printf("Find album title %s", albumTitle)
+			if albumTitle == "" {
+				log.Println("No album title found", e.Request.URL)
+			}
+		*/
+		// e.ForEach("p", func(_ int, elem *colly.HTMLElement) {
+		// log.Printf("Find current elements %s", elem.Name)
+		/*
+			if strings.Contains(elem.Text, "") {
+				log.Println("")
+			}
+		*/
+		// })
+
+	})
+
 	c.Visit("http://www.gr-oborona.ru/texts/")
+}
+
+func decodeWindows1251(ba []uint8) []uint8 {
+	dec := charmap.Windows1251.NewDecoder()
+	out, _ := dec.Bytes(ba)
+	return out
 }
