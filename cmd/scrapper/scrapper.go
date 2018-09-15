@@ -54,8 +54,15 @@ func main() {
 	songCollector.OnHTML(`div[id=cont]`, func(e *colly.HTMLElement) {
 		log.Println("Song link found", e.Request.URL)
 
-		// songTitle := e.ChildText("div.h3")
-		// log.Printf("Find song title %s", songTitle)
+		// decodedAlbumTitle := decodeWindows1251([]byte(e.ChildText("p > strong")))
+		// log.Printf("Find album title %s", decodedAlbumTitle)
+
+		e.ForEach("p", func(_ int, elem *colly.HTMLElement) {
+			decodedSmth := decodeWindows1251([]byte(elem.Text))
+			log.Printf("Find smth from loop %s", decodedSmth)
+		})
+
+		// e.ForEach("br", )
 
 		/*
 			albumTitle := e.ChildText("p")
