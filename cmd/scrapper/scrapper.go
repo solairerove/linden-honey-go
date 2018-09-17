@@ -39,7 +39,7 @@ func main() {
 
 		// Print link
 		decodedSongTitle := decodeWindows1251([]byte(e.Text))
-		log.Printf("Link found: %q -> %s\n", decodedSongTitle, link)
+		log.Printf("Song title found: %q\n", decodedSongTitle)
 
 		// Visit link found on page
 		// Only those links are visited which are in AllowedDomains
@@ -51,37 +51,39 @@ func main() {
 		fmt.Println("Visiting", r.URL.String())
 	})
 
+	// On every a element which has `div[id=cont]` attribute call callback
 	songCollector.OnHTML(`div[id=cont]`, func(e *colly.HTMLElement) {
 		log.Println("Song link found", e.Request.URL)
-
-		// decodedAlbumTitle := decodeWindows1251([]byte(e.ChildText("p > strong")))
-		// log.Printf("Find album title %s", decodedAlbumTitle)
 
 		e.ForEach("p", func(_ int, elem *colly.HTMLElement) {
 			decodedSmth := decodeWindows1251([]byte(elem.Text))
 			log.Printf("Find smth from loop %s", decodedSmth)
 		})
 
-		// e.ForEach("br", )
+		// Find body with lyrics
+		dirtyHTML, _ := e.DOM.Html()
 
-		/*
-			albumTitle := e.ChildText("p")
-			log.Printf("Find album title %s", albumTitle)
-			if albumTitle == "" {
-				log.Println("No album title found", e.Request.URL)
-			}
-		*/
-		// e.ForEach("p", func(_ int, elem *colly.HTMLElement) {
-		// log.Printf("Find current elements %s", elem.Name)
-		/*
-			if strings.Contains(elem.Text, "") {
-				log.Println("")
-			}
-		*/
-		// })
+		// fixme
+		rl := regexp.MustCompile("(</script>)(.+)(<p>)")
+		lyricHTML := rl.FindString(dirtyHTML)
 
+		// fixme
+		ril := regexp.MustCompile("(</strong>.+</p>)(.+)(<p>)")
+		improvedLyricsHTML := ril.FindString(lyricHTML)
+
+		// fixme
+		rs := regexp.MustCompile("&nbsp;")
+		trimmedHTML := rs.ReplaceAllString(improvedLyricsHTML, "")
+
+		// fixme
+		rbr := regexp.MustCompile("<br/><br/>")
+		quartedHTML := rbr.Split(trimmedHTML, -1)
+
+		// decodedHTML := decodeWindows1251([]byte(trimmedHTML))
+		log.Printf("Find DOM1 %s", quartedHTML[0])
 	})
 
+	// fixme
 	c.Visit("http://www.gr-oborona.ru/texts/")
 }
 

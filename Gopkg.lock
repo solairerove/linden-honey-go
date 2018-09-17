@@ -160,6 +160,9 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/gocolly/colly"]
+  input-imports = [
+    "github.com/gocolly/colly",
+    "golang.org/x/text/encoding/charmap",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
