@@ -68,19 +68,35 @@ func main() {
 		lyricHTML := rl.FindString(dirtyHTML)
 
 		// fixme
-		ril := regexp.MustCompile("(</strong>.+</p>)(.+)(<p>)")
-		improvedLyricsHTML := ril.FindString(lyricHTML)
+		// ril := regexp.MustCompile("(</strong>.+</p>)(.+)(<p>)")
+		// improvedLyricsHTML := ril.FindString(lyricHTML)
+
+		ril := regexp.MustCompile(`<\/p><p><strong>.+<\/strong>.+<\/p>(?P<Lyrics>.+)<p>`)
+		improvedLyricsHTML := ril.FindAllStringSubmatch(lyricHTML, -1)
+		names := ril.SubexpNames()
+
+		if improvedLyricsHTML == nil {
+			return
+		}
+
+		md := map[string]string{}
+		for i, n := range improvedLyricsHTML[0] {
+			// fmt.Printf("%d. match='%s'\tname='%s'\n", i, n, names[i])
+			md[names[i]] = n
+		}
 
 		// fixme
-		rs := regexp.MustCompile("&nbsp;")
-		trimmedHTML := rs.ReplaceAllString(improvedLyricsHTML, "")
+		// rs := regexp.MustCompile("&nbsp;")
+		// trimmedHTML := rs.ReplaceAllString(improvedLyricsHTML, "")
 
 		// fixme
-		rbr := regexp.MustCompile("<br/><br/>")
-		quartedHTML := rbr.Split(trimmedHTML, -1)
+		// rbr := regexp.MustCompile("<br/><br/>")
+		// quartedHTML := rbr.Split(trimmedHTML, -1)
 
 		// decodedHTML := decodeWindows1251([]byte(trimmedHTML))
-		log.Printf("Find DOM1 %s", quartedHTML[0])
+		// log.Printf("Find DOM1 %s", quartedHTML[0])
+
+		log.Printf("Find DOM1 %s", md["Lyrics"])
 	})
 
 	// fixme
