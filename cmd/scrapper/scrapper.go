@@ -9,6 +9,8 @@ import (
 	"golang.org/x/text/encoding/charmap"
 )
 
+// create Song structure
+
 func main() {
 
 	// Instantiate default collector
@@ -68,9 +70,6 @@ func main() {
 		lyricHTML := rl.FindString(dirtyHTML)
 
 		// fixme
-		// ril := regexp.MustCompile("(</strong>.+</p>)(.+)(<p>)")
-		// improvedLyricsHTML := ril.FindString(lyricHTML)
-
 		ril := regexp.MustCompile(`<\/p><p><strong>.+<\/strong>.+<\/p>(?P<Lyrics>.+)<p>`)
 		improvedLyricsHTML := ril.FindAllStringSubmatch(lyricHTML, -1)
 		names := ril.SubexpNames()
@@ -81,8 +80,18 @@ func main() {
 
 		md := map[string]string{}
 		for i, n := range improvedLyricsHTML[0] {
-			// fmt.Printf("%d. match='%s'\tname='%s'\n", i, n, names[i])
 			md[names[i]] = n
+		}
+
+		rlp := regexp.MustCompile(`<br/><br/>`)
+		unparsedLyrics := rlp.Split(md["Lyrics"], -1)
+
+		for _, e := range unparsedLyrics {
+			log.Print("\n")
+			str := regexp.MustCompile(`<br/>`).Split(e, -1)
+			for _, s := range str {
+				log.Printf("Lyrics found %s", s)
+			}
 		}
 
 		// fixme
@@ -95,8 +104,6 @@ func main() {
 
 		// decodedHTML := decodeWindows1251([]byte(trimmedHTML))
 		// log.Printf("Find DOM1 %s", quartedHTML[0])
-
-		log.Printf("Find DOM1 %s", md["Lyrics"])
 	})
 
 	// fixme
