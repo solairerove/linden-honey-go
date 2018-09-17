@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/gocolly/colly"
 	"golang.org/x/text/encoding/charmap"
 )
 
-// create Song structure
+// Song ... tbd
+type Song struct {
+	Title  string
+	Link   string
+	Author string
+	Album  string
+	Verses []string
+}
 
 func main() {
 
@@ -30,6 +38,8 @@ func main() {
 
 	songCollector := c.Clone()
 
+	var song Song
+
 	// On every a element which has href attribute call callback
 	c.OnHTML(`a[href]`, func(e *colly.HTMLElement) {
 		link := e.Attr("href")
@@ -43,6 +53,8 @@ func main() {
 		decodedSongTitle := decodeWindows1251([]byte(e.Text))
 		log.Printf("Song title found: %q\n", decodedSongTitle)
 
+		song.Title = string(decodedSongTitle)
+
 		// Visit link found on page
 		// Only those links are visited which are in AllowedDomains
 		songCollector.Visit(e.Request.AbsoluteURL(link))
@@ -55,11 +67,22 @@ func main() {
 
 	// On every a element which has `div[id=cont]` attribute call callback
 	songCollector.OnHTML(`div[id=cont]`, func(e *colly.HTMLElement) {
-		log.Println("Song link found", e.Request.URL)
+		// log.Println("Song link found", e.Request.URL)
+
+		song.Link = e.Request.URL.String()
 
 		e.ForEach("p", func(_ int, elem *colly.HTMLElement) {
 			decodedSmth := decodeWindows1251([]byte(elem.Text))
 			log.Printf("Find smth from loop %s", decodedSmth)
+
+			// fixme
+			if strings.Contains(string(decodedSmth), "Автор") {
+				song.Author = string(decodedSmth)
+			}
+
+			if strings.Contains(string(decodedSmth), "Альбом") {
+				song.Album = string(decodedSmth)
+			}
 		})
 
 		// Find body with lyrics
@@ -90,19 +113,27 @@ func main() {
 		unparsedLyrics := rlp.Split(md["Lyrics"], -1)
 
 		// split to separated verses
+		verses := make([]string, 0)
 		for _, e := range unparsedLyrics {
 			log.Print("\n")
 			str := regexp.MustCompile(`<br/>`).Split(e, -1)
 			for _, s := range str {
 				result := regexp.MustCompile(`&#39;`).ReplaceAllString(s, "'")
+
 				// non suka breaking space replaced by human readble space
 				trimmedResult := regexp.MustCompile(" ").ReplaceAllString(result, " ")
 				decodedResult := decodeWindows1251([]byte(trimmedResult))
+				verses = append(verses, string(decodedResult)+"\n")
 
-				// t := regexp.MustCompile(`B`)
 				log.Printf("Lyrics found %s", string(decodedResult))
 			}
+
+			verses = append(verses, "\n\n")
 		}
+
+		song.Verses = verses
+
+		log.Printf("Prepare to save next Song -> %s", song)
 	})
 
 	// fixme
