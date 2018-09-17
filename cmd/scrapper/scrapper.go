@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -16,7 +17,13 @@ type Song struct {
 	Link   string
 	Author string
 	Album  string
-	Verses []string
+	Verses *[]Verse
+}
+
+// Verse ... tbd
+type Verse struct {
+	Ordinal int
+	Content string
 }
 
 func main() {
@@ -113,7 +120,7 @@ func main() {
 		unparsedLyrics := rlp.Split(md["Lyrics"], -1)
 
 		// split to separated verses
-		verses := make([]string, 0)
+		dirtyVerses := make([]string, 0)
 		for _, e := range unparsedLyrics {
 			log.Print("\n")
 			str := regexp.MustCompile(`<br/>`).Split(e, -1)
@@ -123,17 +130,24 @@ func main() {
 				// non suka breaking space replaced by human readble space
 				trimmedResult := regexp.MustCompile(" ").ReplaceAllString(result, " ")
 				decodedResult := decodeWindows1251([]byte(trimmedResult))
-				verses = append(verses, string(decodedResult)+"\n")
+				dirtyVerses = append(dirtyVerses, string(decodedResult)+"\n")
 
 				log.Printf("Lyrics found %s", string(decodedResult))
 			}
 
-			verses = append(verses, "\n\n")
+			dirtyVerses = append(dirtyVerses, "\n\n")
 		}
 
-		song.Verses = verses
+		verses := make([]Verse, 0)
 
-		log.Printf("Prepare to save next Song -> %s", song)
+		for i, v := range dirtyVerses {
+			verses = append(verses, Verse{Ordinal: i, Content: v})
+		}
+
+		song.Verses = &verses
+
+		marshaledSong, _ := json.Marshal(song)
+		log.Printf("Prepare to save next Song -> %s", string(marshaledSong))
 	})
 
 	// fixme
