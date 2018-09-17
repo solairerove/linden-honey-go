@@ -90,7 +90,8 @@ func main() {
 			log.Print("\n")
 			str := regexp.MustCompile(`<br/>`).Split(e, -1)
 			for _, s := range str {
-				log.Printf("Lyrics found %s", s)
+				r := regexp.MustCompile(`&#39;`).ReplaceAllString(s, "'")
+				log.Printf("Lyrics found %s", r)
 			}
 		}
 
