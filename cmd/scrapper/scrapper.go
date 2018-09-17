@@ -74,43 +74,42 @@ func main() {
 		improvedLyricsHTML := ril.FindAllStringSubmatch(lyricHTML, -1)
 		names := ril.SubexpNames()
 
+		// if non match patter return
 		if improvedLyricsHTML == nil {
 			return
 		}
 
+		// create map with group name -> content
 		md := map[string]string{}
 		for i, n := range improvedLyricsHTML[0] {
 			md[names[i]] = n
 		}
 
+		// split to verses group
 		rlp := regexp.MustCompile(`<br/><br/>`)
 		unparsedLyrics := rlp.Split(md["Lyrics"], -1)
 
+		// split to separated verses
 		for _, e := range unparsedLyrics {
 			log.Print("\n")
 			str := regexp.MustCompile(`<br/>`).Split(e, -1)
 			for _, s := range str {
-				r := regexp.MustCompile(`&#39;`).ReplaceAllString(s, "'")
-				log.Printf("Lyrics found %s", r)
+				result := regexp.MustCompile(`&#39;`).ReplaceAllString(s, "'")
+				// non suka breaking space replaced by human readble space
+				trimmedResult := regexp.MustCompile(" ").ReplaceAllString(result, " ")
+				decodedResult := decodeWindows1251([]byte(trimmedResult))
+
+				// t := regexp.MustCompile(`B`)
+				log.Printf("Lyrics found %s", string(decodedResult))
 			}
 		}
-
-		// fixme
-		// rs := regexp.MustCompile("&nbsp;")
-		// trimmedHTML := rs.ReplaceAllString(improvedLyricsHTML, "")
-
-		// fixme
-		// rbr := regexp.MustCompile("<br/><br/>")
-		// quartedHTML := rbr.Split(trimmedHTML, -1)
-
-		// decodedHTML := decodeWindows1251([]byte(trimmedHTML))
-		// log.Printf("Find DOM1 %s", quartedHTML[0])
 	})
 
 	// fixme
 	c.Visit("http://www.gr-oborona.ru/texts/")
 }
 
+// decode shitty cp1251 to human readalbe utf-8
 func decodeWindows1251(ba []uint8) []uint8 {
 	dec := charmap.Windows1251.NewDecoder()
 	out, _ := dec.Bytes(ba)
