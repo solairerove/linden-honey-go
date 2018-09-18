@@ -14,7 +14,7 @@ type Song struct {
 	Link   string        `json:"link,omitempty"`
 	Author string        `json:"author,omitempty"`
 	Album  string        `json:"album,omitempty"`
-	Verses *[]Verse      `json:"verses,omitempty"`
+	Verses []Verse       `json:"verses,omitempty"`
 }
 
 // Verse ... tbd
@@ -30,9 +30,23 @@ func (s *Song) CreateSong(db *sql.DB) error {
 	err := db.QueryRow("INSERT INTO songs(title, link, author, album) VALUES($1, $2, $3, $4) RETURNING id",
 		s.Title, s.Link, s.Author, s.Album).Scan(&s.ID)
 
-	log.Printf("Smth from db -> %s", s.ID.UUID.String())
 	if err != nil {
 		return err
+	}
+
+	log.Printf("Persisted song id -> %s", s.ID.UUID.String())
+
+	for _, v := range s.Verses {
+		v.SongID = s.ID
+
+		err := db.QueryRow("INSERT INTO verses(ordinal, data, song_id) VALUES($1, $2, $3) RETURNING id",
+			v.Ordinal, v.Data, v.SongID).Scan(&v.ID)
+
+		if err != nil {
+			return err
+		}
+
+		log.Printf("Persisted verse id -> %s", v.ID.UUID.String())
 	}
 
 	return nil
