@@ -22,7 +22,7 @@ type Song struct {
 
 // Verse ... tbd
 type Verse struct {
-	Ordinal int    `json:"ord,omitempty"`
+	Ordinal int    `json:"ord"`
 	Data    string `json:"data,omitempty"`
 }
 
@@ -167,7 +167,7 @@ func main() {
 		verses := make([]Verse, 0)
 
 		for i, v := range dirtyVerses {
-			verses = append(verses, Verse{Ordinal: i + 1, Data: v})
+			verses = append(verses, Verse{Ordinal: i, Data: v})
 		}
 
 		song.Verses = &verses
