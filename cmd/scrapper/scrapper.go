@@ -13,17 +13,40 @@ import (
 
 // Song ... tbd
 type Song struct {
-	Title  string
-	Link   string
-	Author string
-	Album  string
-	Verses *[]Verse
+	Title  string   `json:"title,omitempty"`
+	Link   string   `json:"link,omitempty"`
+	Author string   `json:"author,omitempty"`
+	Album  string   `json:"album,omitempty"`
+	Verses *[]Verse `json:"verses,omitempty"`
 }
 
 // Verse ... tbd
 type Verse struct {
-	Ordinal int
-	Content string
+	Ordinal int    `json:"ord,omitempty"`
+	Data    string `json:"data,omitempty"`
+}
+
+type myRexexp struct {
+	*regexp.Regexp
+}
+
+func (r *myRexexp) FindStringSubmatchMap(s string) map[string]string {
+	captures := make(map[string]string)
+
+	match := r.FindStringSubmatch(s)
+	if match == nil {
+		return captures
+	}
+
+	for i, name := range r.SubexpNames() {
+		if i == 0 || name == "" {
+			continue
+		}
+
+		captures[name] = match[i]
+	}
+
+	return captures
 }
 
 func main() {
@@ -39,7 +62,7 @@ func main() {
 
 		// Visit only root url and urls which start with "text" on www.gr-oborona.ru
 		colly.URLFilters(
-			regexp.MustCompile("http://www.gr-oborona.ru/texts/"), // fixme
+			regexp.MustCompile("http://www.gr-oborona.ru/texts/"),
 		),
 	)
 
@@ -51,7 +74,7 @@ func main() {
 	c.OnHTML(`a[href]`, func(e *colly.HTMLElement) {
 		link := e.Attr("href")
 
-		// fix regexp or fuck this
+		// ignore self link
 		if e.Text == "" {
 			return
 		}
@@ -82,13 +105,16 @@ func main() {
 			decodedSmth := decodeWindows1251([]byte(elem.Text))
 			log.Printf("Find smth from loop %s", decodedSmth)
 
-			// fixme
+			// substring after Автор:
 			if strings.Contains(string(decodedSmth), "Автор") {
-				song.Author = string(decodedSmth)
+				rau := myRexexp{regexp.MustCompile("(?:Автор:[\\s])(?P<author>.+)")}
+				song.Author = rau.FindStringSubmatchMap(string(decodedSmth))["author"]
 			}
 
+			// substring after Альбом:
 			if strings.Contains(string(decodedSmth), "Альбом") {
-				song.Album = string(decodedSmth)
+				ral := myRexexp{regexp.MustCompile("(?:Альбом:[\\s])(?P<album>.+)")}
+				song.Album = ral.FindStringSubmatchMap(string(decodedSmth))["album"]
 			}
 		})
 
@@ -141,7 +167,7 @@ func main() {
 		verses := make([]Verse, 0)
 
 		for i, v := range dirtyVerses {
-			verses = append(verses, Verse{Ordinal: i, Content: v})
+			verses = append(verses, Verse{Ordinal: i, Data: v})
 		}
 
 		song.Verses = &verses
