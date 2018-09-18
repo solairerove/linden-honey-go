@@ -22,7 +22,7 @@ type Verse struct {
 	ID      uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"Id"`
 	Ordinal int           `json:"ord"`
 	Data    string        `json:"data,omitempty"`
-	SongID  uuid.NullUUID `sql:",type:uuid" json:"songId"`
+	SongID  uuid.NullUUID `sql:",type:uuid" json:"ignore"`
 }
 
 // CreateSong ... tbd
@@ -39,23 +39,59 @@ func (s *Song) CreateSong(db *sql.DB) error {
 	for _, v := range s.Verses {
 		v.SongID = s.ID
 
-		err := db.QueryRow("INSERT INTO verses(ordinal, data, song_id) VALUES($1, $2, $3) RETURNING id",
-			v.Ordinal, v.Data, v.SongID).Scan(&v.ID)
-
-		if err != nil {
-			return err
-		}
-
-		log.Printf("Persisted verse id -> %s", v.ID.UUID.String())
+		v.CreateVerse(db)
 	}
 
 	return nil
 }
 
-// GetSong ... tbd
-func (s *Song) GetSong(db *sql.DB) error {
-	log.Fatal("Not implemented yet")
+// CreateVerse ... tbd
+func (v *Verse) CreateVerse(db *sql.DB) error {
+	err := db.QueryRow("INSERT INTO verses(ordinal, data, song_id) VALUES($1, $2, $3) RETURNING id",
+		v.Ordinal, v.Data, v.SongID).Scan(&v.ID)
+
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Persisted verse id -> %s", v.ID.UUID.String())
+
 	return nil
+}
+
+// GetSong ... tbd
+func GetSong(db *sql.DB, id string) (Song, error) {
+
+	rows, err := db.Query(`
+	SELECT songs.id, songs.title, songs.link, songs.author, songs.album, verses.id, verses.ordinal, verses.data, verses.song_id
+	FROM songs 
+		INNER JOIN verses 
+		ON songs.id=verses.song_id 
+	WHERE songs.id = $1`, id)
+
+	if err != nil {
+		log.Fatalf("Such error: %s", err.Error())
+		return Song{}, err
+	}
+
+	defer rows.Close()
+
+	var s Song
+	verses := []Verse{}
+
+	for rows.Next() {
+
+		var v Verse
+		if err := rows.Scan(&s.ID, &s.Title, &s.Link, &s.Author, &s.Album, &v.ID, &v.Ordinal, &v.Data, &v.SongID); err != nil {
+			log.Fatalf("Such error: %s", err.Error())
+			return Song{}, err
+		}
+		verses = append(verses, v)
+	}
+
+	s.Verses = verses
+
+	return s, nil
 }
 
 // GetSongs ... tbd

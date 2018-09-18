@@ -6,9 +6,9 @@ package main
 // parse html with lyric +
 // parse verses +
 // use some struct to persist whole song +
-// parallel
-// use some sql or documented db
-// write model and methods
+// parallel -
+// use some sql or documented db +
+// write model and methods +-
 // write api
 // write tests
 // docker and docker compose
@@ -22,23 +22,11 @@ import (
 	"strings"
 
 	"github.com/gocolly/colly"
+	_ "github.com/lib/pq"
+	"github.com/solairerove/linden-honey-go/model"
+	"github.com/solairerove/linden-honey-go/sarvar"
 	"golang.org/x/text/encoding/charmap"
 )
-
-// Song ... tbd
-type Song struct {
-	Title  string   `json:"title,omitempty"`
-	Link   string   `json:"link,omitempty"`
-	Author string   `json:"author,omitempty"`
-	Album  string   `json:"album,omitempty"`
-	Verses *[]Verse `json:"verses,omitempty"`
-}
-
-// Verse ... tbd
-type Verse struct {
-	Ordinal int    `json:"ord"`
-	Data    string `json:"data,omitempty"`
-}
 
 type myRexexp struct {
 	*regexp.Regexp
@@ -65,6 +53,11 @@ func (r *myRexexp) FindStringSubmatchMap(s string) map[string]string {
 
 func main() {
 
+	s := sarvar.Sarvar{}
+
+	// connect to db with credentials, os.env variables in non local machine
+	s.Initialize("linden-honey-user", "linden-honey-pass", "linden-honey")
+
 	// Instantiate default collector
 	c := colly.NewCollector(
 		// Visit only domain: www.gr-oborona.ru
@@ -82,7 +75,7 @@ func main() {
 
 	songCollector := c.Clone()
 
-	var song Song
+	var song model.Song
 
 	// On every a element which has href attribute call callback
 	c.OnHTML(`a[href]`, func(e *colly.HTMLElement) {
@@ -178,16 +171,18 @@ func main() {
 			dirtyVerses = append(dirtyVerses, "\n\n")
 		}
 
-		verses := make([]Verse, 0)
+		verses := make([]model.Verse, 0)
 
 		for i, v := range dirtyVerses {
-			verses = append(verses, Verse{Ordinal: i, Data: v})
+			verses = append(verses, model.Verse{Ordinal: i, Data: v})
 		}
 
-		song.Verses = &verses
+		song.Verses = verses
 
 		marshaledSong, _ := json.Marshal(song)
 		log.Printf("Prepare to save next Song -> %s", string(marshaledSong))
+
+		song.CreateSong(s.DB)
 	})
 
 	// fixme

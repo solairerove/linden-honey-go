@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -19,16 +20,23 @@ func main() {
 	// my super migration
 	// ensureTableExists()
 
-	// test data to improve save method
-	verses := []model.Verse{model.Verse{Ordinal: 1, Data: "lyrics"}, model.Verse{Ordinal: 2, Data: "lyrics"}}
-	song := model.Song{
-		Title:  "Flying Home",
-		Link:   "http://www.gr-oborona.ru/texts/1056561331.html",
-		Author: "американская народная, поёт Д. Селиванов",
-		Album:  "Хроника Пикирующего Бомбардировщика",
-		Verses: verses}
+	/*
+		// test data to improve save method
+		verses := []model.Verse{model.Verse{Ordinal: 1, Data: "lyrics"}, model.Verse{Ordinal: 2, Data: "lyrics"}}
+		song := model.Song{
+			Title:  "Flying Home",
+			Link:   "http://www.gr-oborona.ru/texts/1056561331.html",
+			Author: "американская народная, поёт Д. Селиванов",
+			Album:  "Хроника Пикирующего Бомбардировщика",
+			Verses: verses}
 
-	song.CreateSong(s.DB)
+		song.CreateSong(s.DB)
+	*/
+
+	unmarshaledSong, _ := model.GetSong(s.DB, "08b40777-c464-4063-9ba7-418566c09bac")
+
+	marshaledSong, _ := json.Marshal(unmarshaledSong)
+	log.Printf("Find current song %s", string(marshaledSong))
 }
 
 // future migration
