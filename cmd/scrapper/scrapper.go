@@ -167,7 +167,7 @@ func main() {
 		verses := make([]Verse, 0)
 
 		for i, v := range dirtyVerses {
-			verses = append(verses, Verse{Ordinal: i, Data: v})
+			verses = append(verses, Verse{Ordinal: i + 1, Data: v})
 		}
 
 		song.Verses = &verses
