@@ -1,5 +1,19 @@
 package main
 
+// simple scrapper +
+// go to all text links +
+// parse title, album and author +
+// parse html with lyric +
+// parse verses +
+// use some struct to persist whole song +
+// parallel
+// use some sql or documented db
+// write model and methods
+// write api
+// write tests
+// docker and docker compose
+// deliver
+
 import (
 	"encoding/json"
 	"fmt"
