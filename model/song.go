@@ -30,6 +30,7 @@ func (s *Song) CreateSong(db *sql.DB) error {
 	err := db.QueryRow("INSERT INTO songs(title, link, author, album) VALUES($1, $2, $3, $4) RETURNING id",
 		s.Title, s.Link, s.Author, s.Album).Scan(&s.ID)
 
+	log.Printf("Smth from db -> %s", s.ID.UUID.String())
 	if err != nil {
 		return err
 	}
