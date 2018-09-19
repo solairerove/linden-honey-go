@@ -11,7 +11,7 @@ package main
 // write model and methods +-
 // write api
 // write tests
-// docker and docker compose
+// docker and docker compose +-
 // deliver
 
 import (
@@ -182,7 +182,7 @@ func main() {
 		marshaledSong, _ := json.Marshal(song)
 		log.Printf("Prepare to save next Song -> %s", string(marshaledSong))
 
-		song.CreateSong(s.DB)
+		song.SaveSong(s.DB)
 	})
 
 	// fixme
