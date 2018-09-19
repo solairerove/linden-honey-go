@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/solairerove/linden-honey-go/model"
 )
 
 // Sarvar ... tbd
@@ -38,10 +39,25 @@ func (s *Sarvar) Run(addr string) {
 
 func (s *Sarvar) initializeRoutes() {
 	s.Router.HandleFunc("/hello", s.helloHandle).Methods("GET")
+	s.Router.HandleFunc("/songs/{id}", s.getSongByID).Methods("GET")
 }
 
 func (s *Sarvar) helloHandle(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello World !")
+}
+
+func (s *Sarvar) getSongByID(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	song, err := model.FindSongByID(s.DB, id)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, song)
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {

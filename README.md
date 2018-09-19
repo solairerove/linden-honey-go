@@ -1,4 +1,4 @@
-# Linden Honey GoLang edition
+# Linden Honey
 
 > REST API for the lyrics of Yegor Letov - GoLang Edition
 

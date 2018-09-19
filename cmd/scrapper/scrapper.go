@@ -13,6 +13,8 @@ package main
 // write tests
 // docker and docker compose +-
 // deliver
+// add configuration support
+// rewrite readme
 
 import (
 	"encoding/json"
