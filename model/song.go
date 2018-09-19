@@ -25,8 +25,8 @@ type Verse struct {
 	SongID  uuid.NullUUID `sql:",type:uuid" json:"-"`
 }
 
-// CreateSong ... tbd
-func (s *Song) CreateSong(db *sql.DB) error {
+// SaveSong ... tbd
+func (s *Song) SaveSong(db *sql.DB) error {
 	err := db.QueryRow("INSERT INTO songs(title, link, author, album) VALUES($1, $2, $3, $4) RETURNING id",
 		s.Title, s.Link, s.Author, s.Album).Scan(&s.ID)
 
@@ -39,14 +39,14 @@ func (s *Song) CreateSong(db *sql.DB) error {
 	for _, v := range s.Verses {
 		v.SongID = s.ID
 
-		v.CreateVerse(db)
+		v.saveVerse(db)
 	}
 
 	return nil
 }
 
-// CreateVerse ... tbd
-func (v *Verse) CreateVerse(db *sql.DB) error {
+// saveVerse ... tbd
+func (v *Verse) saveVerse(db *sql.DB) error {
 	err := db.QueryRow("INSERT INTO verses(ordinal, data, song_id) VALUES($1, $2, $3) RETURNING id",
 		v.Ordinal, v.Data, v.SongID).Scan(&v.ID)
 
@@ -59,11 +59,11 @@ func (v *Verse) CreateVerse(db *sql.DB) error {
 	return nil
 }
 
-// GetSong ... tbd
-func GetSong(db *sql.DB, id string) (Song, error) {
+// FindSongByID ... tbd
+func FindSongByID(db *sql.DB, id string) (Song, error) {
 
 	rows, err := db.Query(`
-	SELECT songs.id, songs.title, songs.link, songs.author, songs.album, verses.id, verses.ordinal, verses.data, verses.song_id
+	SELECT songs.id, songs.title, songs.link, songs.author, songs.album, verses.ordinal, verses.data
 	FROM songs 
 		INNER JOIN verses 
 		ON songs.id=verses.song_id 
@@ -82,7 +82,7 @@ func GetSong(db *sql.DB, id string) (Song, error) {
 	for rows.Next() {
 
 		var v Verse
-		if err := rows.Scan(&s.ID, &s.Title, &s.Link, &s.Author, &s.Album, &v.ID, &v.Ordinal, &v.Data, &v.SongID); err != nil {
+		if err := rows.Scan(&s.ID, &s.Title, &s.Link, &s.Author, &s.Album, &v.Ordinal, &v.Data); err != nil {
 			log.Fatalf("Such error: %s", err.Error())
 			return Song{}, err
 		}
@@ -94,8 +94,28 @@ func GetSong(db *sql.DB, id string) (Song, error) {
 	return s, nil
 }
 
-// GetSongs ... tbd
-func GetSongs(db *sql.DB, start, count int) ([]Song, error) {
-	log.Fatal("Not implemented yet")
-	return nil, nil
+// FetchNameToIDMapByName ... tbd
+func FetchNameToIDMapByName(db *sql.DB, name string) (map[string]string, error) {
+	rows, err := db.Query(`SELECT songs.id, songs.title FROM songs WHERE songs.title ILIKE '%` + name + `%'`)
+
+	if err != nil {
+		log.Fatalf("Such SQL error: %s", err.Error())
+		return make(map[string]string, 0), err
+	}
+
+	defer rows.Close()
+
+	nameToID := make(map[string]string, 0)
+
+	for rows.Next() {
+		var s Song
+		if err := rows.Scan(&s.ID, &s.Title); err != nil {
+			log.Fatalf("Such rows mapping error: %s", err.Error())
+			return make(map[string]string, 0), err
+		}
+
+		nameToID[s.ID.UUID.String()] = s.Title
+	}
+
+	return nameToID, nil
 }

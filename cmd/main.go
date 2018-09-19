@@ -33,10 +33,15 @@ func main() {
 		song.CreateSong(s.DB)
 	*/
 
-	unmarshaledSong, _ := model.GetSong(s.DB, "08b40777-c464-4063-9ba7-418566c09bac")
+	unmarshaledSong, _ := model.FindSongByID(s.DB, "08b40777-c464-4063-9ba7-418566c09bac")
 
 	marshaledSong, _ := json.Marshal(unmarshaledSong)
 	log.Printf("Find current song %s", string(marshaledSong))
+
+	unmarshaledMap, _ := model.FetchNameToIDMapByName(s.DB, "м")
+
+	marshaledMap, _ := json.Marshal(unmarshaledMap)
+	log.Printf("Find current map %s", string(marshaledMap))
 }
 
 // future migration
