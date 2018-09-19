@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 
 	_ "github.com/lib/pq"
-	"github.com/solairerove/linden-honey-go/model"
 	"github.com/solairerove/linden-honey-go/sarvar"
 )
 
@@ -20,10 +18,7 @@ func main() {
 	// my super migration
 	// ensureTableExists()
 
-	unmarshaledMap, _ := model.FetchNameToIDMapByName(s.DB, "м")
-
-	marshaledMap, _ := json.Marshal(unmarshaledMap)
-	log.Printf("Find current map %s", string(marshaledMap))
+	s.Run(":8000")
 }
 
 // future migration
