@@ -9,7 +9,7 @@ import (
 
 // Song ... tbd
 type Song struct {
-	ID     uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"Id"`
+	ID     uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"-"`
 	Title  string        `json:"title,omitempty"`
 	Link   string        `json:"link,omitempty"`
 	Author string        `json:"author,omitempty"`
@@ -19,10 +19,10 @@ type Song struct {
 
 // Verse ... tbd
 type Verse struct {
-	ID      uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"Id"`
+	ID      uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"-"`
 	Ordinal int           `json:"ord"`
 	Data    string        `json:"data,omitempty"`
-	SongID  uuid.NullUUID `sql:",type:uuid" json:"ignore"`
+	SongID  uuid.NullUUID `sql:",type:uuid" json:"-"`
 }
 
 // CreateSong ... tbd
