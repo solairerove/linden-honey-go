@@ -40,6 +40,7 @@ func (s *Sarvar) Run(addr string) {
 func (s *Sarvar) initializeRoutes() {
 	s.Router.HandleFunc("/hello", s.helloHandle).Methods("GET")
 	s.Router.HandleFunc("/songs/{id}", s.getSongByID).Methods("GET")
+	s.Router.HandleFunc("/songs", s.getSongByName).Methods("GET")
 }
 
 func (s *Sarvar) helloHandle(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +59,26 @@ func (s *Sarvar) getSongByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, song)
+}
+
+func (s *Sarvar) getSongByName(w http.ResponseWriter, r *http.Request) {
+	vals := r.URL.Query()
+	names, ok := vals["name"]
+	var name string
+	if ok {
+		if len(names) >= 1 {
+			name = names[0]
+		}
+	}
+
+	songsMap, err := model.FetchNameToIDMapByName(s.DB, name)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, songsMap)
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
