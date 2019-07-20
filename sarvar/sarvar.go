@@ -11,6 +11,8 @@ import (
 	"github.com/solairerove/linden-honey-go/model"
 )
 
+// TODO rewrite plz
+
 // Sarvar ... tbd
 type Sarvar struct {
 	Router *mux.Router
@@ -18,8 +20,9 @@ type Sarvar struct {
 }
 
 // Initialize ... tbd
-func (s *Sarvar) Initialize(user, password, dbname string) {
-	connectionString := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
+func (s *Sarvar) Initialize(user, password, dbname, port string) {
+	connectionString := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable",
+		user, password, dbname, port)
 
 	var err error
 	s.DB, err = sql.Open("postgres", connectionString)
@@ -27,6 +30,7 @@ func (s *Sarvar) Initialize(user, password, dbname string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// defer s.DB.Close()
 
 	s.Router = mux.NewRouter()
 	s.initializeRoutes()

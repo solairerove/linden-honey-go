@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Song ... tbd
 type Song struct {
+	// TODO what if move entities to separate repo at all
 	ID     uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"-"`
 	Title  string        `json:"title,omitempty"`
 	Link   string        `json:"link,omitempty"`
