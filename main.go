@@ -1,8 +1,7 @@
 package main
 
 import (
-	_ "github.com/lib/pq"
-	sarvar "github.com/solairerove/linden-honey-go/sarvar"
+	"log"
 )
 
 const (
@@ -13,10 +12,5 @@ const (
 )
 
 func main() {
-	s := sarvar.Sarvar{}
-
-	// connect to db with credentials, os.env variables in non local machine
-	s.Initialize(dbUsername, dbPassword, dbName, dbPort)
-
-	s.Run(":8000")
+	log.Println("Nothing else matters")
 }
