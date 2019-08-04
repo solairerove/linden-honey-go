@@ -16,6 +16,8 @@ services:
   mongo-express:
     container_name: linden-honey-go-db-client
     image: mongo-express:0.49.0
+    depends_on:
+      - mongo
     restart: always
     ports:
       - 8081:8081
@@ -24,6 +26,14 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=linden-honey-pass
       - ME_CONFIG_MONGODB_SERVER=mongo
       - ME_CONFIG_MONGODB_PORT=27017
+    networks:
+      - internal
+
+  scrapper:
+    container_name: linden-honey-go-scraper
+    image: solairerove/linden-honey-go-scraper:1.0.1
+    ports:
+      - 8080:8080
     networks:
       - internal
 
