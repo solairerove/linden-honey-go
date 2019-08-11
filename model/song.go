@@ -16,8 +16,8 @@ type Song struct {
 
 // Verse ... tbd
 type Verse struct {
-	ID      uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"-"`
-	Ordinal int           `json:"ord"`
-	Data    string        `json:"data,omitempty"`
-	SongID  uuid.NullUUID `sql:",type:uuid" json:"-"`
+	ID     uuid.NullUUID `sql:",pk,type:uuid default uuid_generate_v4()" json:"-"`
+	Order  int           `json:"order"`
+	Verse  string        `json:"verse,omitempty"`
+	SongID uuid.NullUUID `sql:",type:uuid" json:"-"`
 }

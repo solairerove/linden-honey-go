@@ -4,6 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strconv"
 )
 
 const (
@@ -22,5 +23,10 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	log.Println(usingLindenHoneyScraper, os.Getenv(usingLindenHoneyScraper))
+	b, err := strconv.ParseBool(os.Getenv(usingLindenHoneyScraper))
+	if err != nil {
+		log.Fatal("Can't parse to bool value")
+	}
+
+	log.Println(usingLindenHoneyScraper, b)
 }
