@@ -17,10 +17,12 @@ import (
 const (
 	lindenHoneyScraperURL   = "LINDEN_HONEY_SCRAPER_URL"
 	usingLindenHoneyScraper = "USING_LINDEN_HONEY_SCRAPER"
+	// TODO: to .env
+	dbURI                   = "mongodb://127.0.0.1:27017"
 	dbUsername              = "linden-honey-user"
 	dbPassword              = "linden-honey-pass"
 	dbName                  = "linden-honey"
-	dbPort                  = "5430"
+	dbCollection            = "songs"
 )
 
 func main() {
@@ -38,8 +40,8 @@ func main() {
 	auth.Username = dbUsername
 	auth.Password = dbPassword
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://127.0.0.1:27017").SetAuth(auth))
-
+	// init client
+	client, err := mongo.NewClient(options.Client().ApplyURI(dbURI).SetAuth(auth))
 	if err != nil {
 		log.Fatal("Error connecting to mongodb: ", err)
 	}
@@ -56,8 +58,8 @@ func main() {
 		log.Fatal("What the fuck is context todo ping: ", err)
 	}
 
-	// TODO: to .env
-	collection := client.Database("linden_honey").Collection("songs")
+	// open connection
+	collection := client.Database(dbName).Collection(dbCollection)
 
 	// close connection
 	defer func() {
