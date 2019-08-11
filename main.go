@@ -101,13 +101,16 @@ func main() {
 			log.Fatal("Error unmarshalling data from scraper: ", err)
 		}
 
-		log.Println(len(songs))
+		// persist collection plz
+		for _, song := range songs {
+			insertResult, err := collection.InsertOne(context.Background(), song)
+			if err != nil {
+				log.Fatal("Error persisting songs into mongodb: ", err)
+			}
 
-		insertResult, err := collection.InsertOne(context.Background(), songs[0])
-		if err != nil {
-			log.Fatal("Error persisting songs into mongodb: ", err)
+			fmt.Println("Inserted one document: ", insertResult.InsertedID)
 		}
 
-		fmt.Println("Inserted multiple documents: ", insertResult.InsertedID)
+		log.Println(len(songs))
 	}
 }
