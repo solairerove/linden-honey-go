@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/solairerove/linden-honey-go/model"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"html"
 	"log"
 	"net/http"
 	"os"
@@ -18,11 +21,11 @@ const (
 	lindenHoneyScraperURL   = "LINDEN_HONEY_SCRAPER_URL"
 	usingLindenHoneyScraper = "USING_LINDEN_HONEY_SCRAPER"
 	// TODO: to .env
-	dbURI                   = "mongodb://127.0.0.1:27017"
-	dbUsername              = "linden-honey-user"
-	dbPassword              = "linden-honey-pass"
-	dbName                  = "linden-honey"
-	dbCollection            = "songs"
+	dbURI        = "mongodb://127.0.0.1:27017"
+	dbUsername   = "linden-honey-user"
+	dbPassword   = "linden-honey-pass"
+	dbName       = "linden-honey"
+	dbCollection = "songs"
 )
 
 func main() {
@@ -114,5 +117,17 @@ func main() {
 		}
 
 		log.Println(len(songs))
+	}
+
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/", index)
+
+	log.Fatal(http.ListenAndServe(":8082", handlers.CompressHandler(router)))
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	_, err := fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	if err != nil {
+		log.Fatalf("Something wrong with greeting endppoint: %v", err)
 	}
 }
