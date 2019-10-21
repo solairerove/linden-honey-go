@@ -1,15 +1,14 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/solairerove/linden-honey-go/model"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"html"
 	"log"
 	"net/http"
@@ -20,16 +19,17 @@ import (
 const (
 	lindenHoneyScraperURL   = "LINDEN_HONEY_SCRAPER_URL"
 	usingLindenHoneyScraper = "USING_LINDEN_HONEY_SCRAPER"
+
 	// TODO: to .env
-	dbURI        = "mongodb://127.0.0.1:27017"
-	dbUsername   = "linden-honey-user"
-	dbPassword   = "linden-honey-pass"
-	dbName       = "linden-honey"
-	dbCollection = "songs"
+	dbUsername = "linden-honey-user"
+	dbPassword = "linden-honey-pass"
+	dbName     = "linden-honey"
 )
 
+var db *sql.DB
+
 func main() {
-	log.Println("Nothing else matters")
+	log.Println("Starting application")
 
 	// load env
 	err := godotenv.Load()
@@ -37,56 +37,29 @@ func main() {
 		log.Fatal("Error loading .env file", err)
 	}
 
-	// TODO: rewrite and move to package after go web udemy
-	// new mongodb client
-	var auth options.Credential
-	auth.Username = dbUsername
-	auth.Password = dbPassword
+	connectionString := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable",
+		dbUsername, dbPassword, dbName, "5432")
 
-	// init client
-	client, err := mongo.NewClient(options.Client().ApplyURI(dbURI).SetAuth(auth))
+	db, err = sql.Open("postgres", connectionString)
+
 	if err != nil {
-		log.Fatal("Error connecting to mongodb: ", err)
+		log.Fatal(err)
 	}
-
-	// connect to context?
-	err = client.Connect(context.Background())
-	if err != nil {
-		log.Fatal("What the fuck is context todo: ", err)
-	}
-
-	// check connection
-	err = client.Ping(context.Background(), nil)
-	if err != nil {
-		log.Fatal("What the fuck is context todo ping: ", err)
-	}
-
-	// open connection
-	collection := client.Database(dbName).Collection(dbCollection)
-
-	// close connection
-	defer func() {
-		err := client.Disconnect(context.Background())
-		if err != nil {
-			log.Fatal("Error closing mongo client: ", err)
-		}
-	}()
-	log.Println("Connection to MongoDB closed.")
 
 	// get scraper bool from .env file
-	b, err := strconv.ParseBool(os.Getenv(usingLindenHoneyScraper))
+	useScrapper, err := strconv.ParseBool(os.Getenv(usingLindenHoneyScraper))
 	if err != nil {
 		log.Fatal("Can't parse to bool value: ", err)
 	}
 
-	log.Println(usingLindenHoneyScraper, b)
+	log.Println(usingLindenHoneyScraper, useScrapper)
 
 	scraperURL := fmt.Sprintf("%s/songs", os.Getenv(lindenHoneyScraperURL))
 	log.Println(lindenHoneyScraperURL, scraperURL)
 
 	// TODO: rewrite and move to package after go web udemy
 	// fetch and update collection if necessary
-	if b {
+	if useScrapper {
 		resp, err := http.Get(scraperURL)
 		if err != nil {
 			log.Fatal("Error loading data from scraper: ", err)
@@ -106,23 +79,17 @@ func main() {
 			log.Fatal("Error unmarshalling data from scraper: ", err)
 		}
 
-		// persist collection plz
-		for _, song := range songs {
-			insertResult, err := collection.InsertOne(context.Background(), song)
-			if err != nil {
-				log.Fatal("Error persisting songs into mongodb: ", err)
-			}
-
-			fmt.Println("Inserted one document: ", insertResult.InsertedID)
+		for _, s := range songs {
+			s.SaveSong(db)
 		}
 
-		log.Println(len(songs))
+		log.Println(songs[0])
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", index)
+	router.HandleFunc("/", index).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8082", handlers.CompressHandler(router)))
+	log.Fatal(http.ListenAndServe(":8081", handlers.CompressHandler(router)))
 }
 
 func index(w http.ResponseWriter, r *http.Request) {

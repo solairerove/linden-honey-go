@@ -1,37 +1,23 @@
 version: "3.7"
 
 services:
-  mongo:
+  db:
     container_name: linden-honey-go-db
-    image: mongo:4.0.11-xenial
+    image: postgres:12.0-alpine
     restart: always
     ports:
-      - 27017:27017
+      - "5432:5432"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=linden-honey-user
-      - MONGO_INITDB_ROOT_PASSWORD=linden-honey-pass
-    networks:
-      - internal
-
-  mongo-express:
-    container_name: linden-honey-go-db-client
-    image: mongo-express:0.49.0
-    depends_on:
-      - mongo
-    restart: always
-    ports:
-      - 8081:8081
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=linden-honey-user
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=linden-honey-pass
-      - ME_CONFIG_MONGODB_SERVER=mongo
-      - ME_CONFIG_MONGODB_PORT=27017
+      - POSTGRES_USER=linden-honey-user
+      - POSTGRES_PASSWORD=linden-honey-pass
+      - POSTGRES_DB=linden-honey
     networks:
       - internal
 
   scrapper:
     container_name: linden-honey-go-scraper
-    image: solairerove/linden-honey-go-scraper:1.0.1
+    image: solairerove/linden-honey-go-scraper:1.0.2
+    restart: always
     ports:
       - 8080:8080
     networks:
