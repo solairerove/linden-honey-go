@@ -26,7 +26,9 @@ const (
 	dbName     = "linden-honey"
 )
 
-var db *sql.DB
+type Server struct {
+	db *sql.DB
+}
 
 func main() {
 	log.Println("Starting application")
@@ -37,10 +39,12 @@ func main() {
 		log.Fatal("Error loading .env file", err)
 	}
 
+	server := Server{}
+
 	connectionString := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable",
 		dbUsername, dbPassword, dbName, "5432")
 
-	db, err = sql.Open("postgres", connectionString)
+	server.db, err = sql.Open("postgres", connectionString)
 
 	if err != nil {
 		log.Fatal(err)
@@ -80,7 +84,7 @@ func main() {
 		}
 
 		for _, s := range songs {
-			s.SaveSong(db)
+			s.SaveSong(server.db)
 		}
 
 		log.Println(songs[0])
@@ -88,6 +92,7 @@ func main() {
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", index).Methods("GET")
+	router.HandleFunc("/songs/{id}", server.getSongByID).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8081", handlers.CompressHandler(router)))
 }
@@ -97,4 +102,30 @@ func index(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalf("Something wrong with greeting endppoint: %v", err)
 	}
+}
+
+func (s *Server) getSongByID(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	song, err := model.FindSongByID(s.db, id)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, song)
+}
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
 }

@@ -57,3 +57,38 @@ func (v *Verse) saveVerse(db *sql.DB) error {
 
 	return nil
 }
+
+// FindSongByID ... tbd
+func FindSongByID(db *sql.DB, id string) (Song, error) {
+
+	rows, err := db.Query(`
+	SELECT songs.id, songs.title, songs.link, songs.author, songs.album, verses.ordinal, verses.verse
+	FROM songs 
+		INNER JOIN verses 
+		ON songs.id=verses.song_id 
+	WHERE songs.id = $1`, id)
+
+	if err != nil {
+		log.Fatalf("Such error: %s", err.Error())
+		return Song{}, err
+	}
+
+	defer rows.Close()
+
+	var s Song
+	verses := []Verse{}
+
+	for rows.Next() {
+
+		var v Verse
+		if err := rows.Scan(&s.ID, &s.Title, &s.Link, &s.Author, &s.Album, &v.Ordinal, &v.Verse); err != nil {
+			log.Fatalf("Such error: %s", err.Error())
+			return Song{}, err
+		}
+		verses = append(verses, v)
+	}
+
+	s.Verses = verses
+
+	return s, nil
+}
