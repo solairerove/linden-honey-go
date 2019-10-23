@@ -93,6 +93,7 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", index).Methods("GET")
 	router.HandleFunc("/songs/{id}", server.getSongByID).Methods("GET")
+	router.HandleFunc("/songs", server.getSongByName).Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8081", handlers.CompressHandler(router)))
 }
@@ -116,6 +117,26 @@ func (s *Server) getSongByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, song)
+}
+
+func (s *Server) getSongByName(w http.ResponseWriter, r *http.Request) {
+	vals := r.URL.Query()
+	names, ok := vals["name"]
+	var name string
+	if ok {
+		if len(names) >= 1 {
+			name = names[0]
+		}
+	}
+
+	songsMap, err := model.FetchNameToIDMapByName(s.db, name)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, songsMap)
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {

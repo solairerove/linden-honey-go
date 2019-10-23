@@ -92,3 +92,29 @@ func FindSongByID(db *sql.DB, id string) (Song, error) {
 
 	return s, nil
 }
+
+// FetchNameToIDMapByName ... tbd
+func FetchNameToIDMapByName(db *sql.DB, name string) (map[string]string, error) {
+	rows, err := db.Query(`SELECT songs.id, songs.title FROM songs WHERE songs.title ILIKE '%` + name + `%'`)
+
+	if err != nil {
+		log.Fatalf("Such SQL error: %s", err.Error())
+		return make(map[string]string, 0), err
+	}
+
+	defer rows.Close()
+
+	nameToID := make(map[string]string, 0)
+
+	for rows.Next() {
+		var s Song
+		if err := rows.Scan(&s.ID, &s.Title); err != nil {
+			log.Fatalf("Such rows mapping error: %s", err.Error())
+			return make(map[string]string, 0), err
+		}
+
+		nameToID[s.ID.UUID.String()] = s.Title
+	}
+
+	return nameToID, nil
+}
