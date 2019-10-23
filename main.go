@@ -19,6 +19,7 @@ import (
 const (
 	lindenHoneyScraperURL   = "LINDEN_HONEY_SCRAPER_URL"
 	usingLindenHoneyScraper = "USING_LINDEN_HONEY_SCRAPER"
+	postgresHost            = "POSTGRES_HOST"
 
 	// TODO: to .env
 	dbUsername = "linden-honey-user"
@@ -36,13 +37,15 @@ func main() {
 	// load env
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file", err)
+		log.Println("Error loading .env file", err)
 	}
 
 	server := Server{}
 
-	connectionString := fmt.Sprintf("user=%s password=%s dbname=%s port=%s sslmode=disable",
-		dbUsername, dbPassword, dbName, "5432")
+	dbHost := fmt.Sprintf("%s", os.Getenv(postgresHost))
+
+	connectionString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		dbHost, dbUsername, dbPassword, dbName, "5432")
 
 	server.db, err = sql.Open("postgres", connectionString)
 
@@ -86,8 +89,6 @@ func main() {
 		for _, s := range songs {
 			s.SaveSong(server.db)
 		}
-
-		log.Println(songs[0])
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -95,7 +96,8 @@ func main() {
 	router.HandleFunc("/songs/{id}", server.getSongByID).Methods("GET")
 	router.HandleFunc("/songs", server.getSongByName).Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8081", handlers.CompressHandler(router)))
+	// change on local dev if needed
+	log.Fatal(http.ListenAndServe(":8080", handlers.CompressHandler(router)))
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
