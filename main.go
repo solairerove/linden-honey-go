@@ -19,6 +19,7 @@ import (
 const (
 	lindenHoneyScraperURL   = "LINDEN_HONEY_SCRAPER_URL"
 	usingLindenHoneyScraper = "USING_LINDEN_HONEY_SCRAPER"
+	usingCors               = "USE_CORS"
 	postgresHost            = "POSTGRES_HOST"
 
 	// TODO: to .env
@@ -108,6 +109,17 @@ func index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSongByID(w http.ResponseWriter, r *http.Request) {
+	useCors, err := strconv.ParseBool(os.Getenv(usingCors))
+	if err != nil {
+		log.Fatal("Can't parse to bool value: ", err)
+	}
+
+	if useCors {
+		//Allow CORS here By * or specific origin
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	}
+
 	params := mux.Vars(r)
 	id := params["id"]
 
@@ -122,6 +134,17 @@ func (s *Server) getSongByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getSongByName(w http.ResponseWriter, r *http.Request) {
+	useCors, err := strconv.ParseBool(os.Getenv(usingCors))
+	if err != nil {
+		log.Fatal("Can't parse to bool value: ", err)
+	}
+
+	if useCors {
+		//Allow CORS here By * or specific origin
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	}
+
 	vals := r.URL.Query()
 	names, ok := vals["name"]
 	var name string
